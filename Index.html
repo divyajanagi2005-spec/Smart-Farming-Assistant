@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Farming Assistant</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eef7ed;
+  text-align: center;
+  padding: 20px;
+}
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  max-width: 450px;
+  margin: auto;
+}
+h1 { color: darkgreen; }
+button {
+  background: green;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin: 10px;
+  font-size: 16px;
+}
+img {
+  max-width: 100%;
+  margin-top: 15px;
+  border-radius: 10px;
+}
+#result {
+  color: darkgreen;
+  font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🌱 Smart Farming Assistant</h1>
+<p>விவசாயிகளுக்கான புத்திசாலி உதவியாளர்</p>
+
+<h3>இலையின் புகைப்படத்தை தேர்வு செய்யவும்</h3>
+
+<input type="file" id="leafImage" accept="image/*">
+
+<img id="preview" style="display:none;">
+
+<h3 id="result">
+வணக்கம்! நமது Smart Farming website-க்கு வரவேற்கிறோம்.
+</h3>
+
+<button onclick="speakTamil()">
+🔊 தமிழில் கேட்க
+</button>
+
+</div>
+
+<script>
+const input = document.getElementById("leafImage");
+
+input.addEventListener("change", function() {
+  const file = input.files[0];
+
+  if (file) {
+    const imageURL = URL.createObjectURL(file);
+    const preview = document.getElementById("preview");
+
+    preview.src = imageURL;
+    preview.style.display = "block";
+
+    document.getElementById("result").innerText =
+      "புகைப்படம் வெற்றிகரமாக பதிவேற்றப்பட்டது. நோய் கண்டறியும் ML model இன்னும் இணைக்கப்படவில்லை.";
+  }
+});
+
+function speakTamil() {
+  const text = document.getElementById("result").innerText;
+
+  if (!("speechSynthesis" in window)) {
+    alert("இந்த browser-ல் voice வசதி கிடைக்கவில்லை.");
+    return;
+  }
+
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "ta-IN";
+  speech.rate = 0.9;
+
+  const voices = speechSynthesis.getVoices();
+  const tamilVoice = voices.find(v =>
+    v.lang.toLowerCase().startsWith("ta")
+  );
+
+  if (tamilVoice) {
+    speech.voice = tamilVoice;
+  }
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(speech);
+}
+</script>
+
+</body>
+</html>
