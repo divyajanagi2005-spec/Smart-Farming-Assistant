@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="ta">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +12,35 @@ body {
   background: #eef7ed;
   text-align: center;
   padding: 20px;
+  margin: 0;
 }
+
 .container {
   background: white;
   padding: 20px;
   border-radius: 15px;
   max-width: 450px;
-  margin: auto;
+  margin: 20px auto;
 }
-h1 { color: darkgreen; }
+
+h1 {
+  color: darkgreen;
+}
+
+h2, h3 {
+  color: #174f20;
+}
+
+select {
+  width: 95%;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #999;
+  font-size: 16px;
+  margin: 15px 0;
+  background: white;
+}
+
 button {
   background: green;
   color: white;
@@ -29,84 +49,303 @@ button {
   border-radius: 8px;
   margin: 10px;
   font-size: 16px;
+  cursor: pointer;
 }
+
+button:hover {
+  background: darkgreen;
+}
+
 img {
   max-width: 100%;
   margin-top: 15px;
   border-radius: 10px;
 }
+
 #result {
   color: darkgreen;
   font-size: 18px;
+}
+
+.hidden {
+  display: none;
+}
+
+input[type="file"] {
+  max-width: 100%;
+  margin: 15px 0;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<!-- LANGUAGE SELECTION PAGE -->
+
+<div class="container" id="languagePage">
 
 <h1>🌱 Smart Farming Assistant</h1>
-<p>விவசாயிகளுக்கான புத்திசாலி உதவியாளர்</p>
 
-<h3>இலையின் புகைப்படத்தை தேர்வு செய்யவும்</h3>
+<h2>Welcome!</h2>
 
-<input type="file" id="leafImage" accept="image/*">
+<h3>Which language do you prefer?</h3>
 
-<img id="preview" style="display:none;">
+<select id="languageSelect">
 
-<h3 id="result">
-வணக்கம்! நமது Smart Farming website-க்கு வரவேற்கிறோம்.
-</h3>
+<option value="ta">தமிழ் – Tamil</option>
 
-<button onclick="speakTamil()">
-🔊 தமிழில் கேட்க
+<option value="en">English – ஆங்கிலம்</option>
+
+<option value="hi">हिन्दी – Hindi</option>
+
+<option value="te">తెలుగు – Telugu</option>
+
+<option value="ml">മലയാളം – Malayalam</option>
+
+<option value="kn">ಕನ್ನಡ – Kannada</option>
+
+</select>
+
+<br>
+
+<button onclick="startWebsite()">
+Continue
 </button>
 
 </div>
 
+
+<!-- MAIN WEBSITE PAGE -->
+
+<div class="container hidden" id="mainPage">
+
+<h1>🌱 Smart Farming Assistant</h1>
+
+<p id="subtitle"></p>
+
+<h3 id="uploadHeading"></h3>
+
+<input type="file"
+id="leafImage"
+accept="image/*">
+
+<img id="preview" style="display:none;">
+
+<h3 id="result"></h3>
+
+<button onclick="speakResult()" id="voiceButton">
+🔊 Listen
+</button>
+
+<br>
+
+<button onclick="changeLanguage()" id="changeButton">
+Change Language
+</button>
+
+</div>
+
+
 <script>
+
+// LANGUAGE DETAILS
+
+const languages = {
+
+ta: {
+code: "ta-IN",
+subtitle: "விவசாயிகளுக்கான புத்திசாலி உதவியாளர்",
+upload: "இலையின் புகைப்படத்தை தேர்வு செய்யவும்",
+welcome: "வணக்கம்! நமது Smart Farming Assistant-க்கு வரவேற்கிறோம்.",
+uploaded: "புகைப்படம் வெற்றிகரமாக பதிவேற்றப்பட்டது. நோய் கண்டறியும் ML model இன்னும் இணைக்கப்படவில்லை.",
+voice: "🔊 தமிழில் கேட்க",
+change: "மொழியை மாற்றவும்"
+},
+
+en: {
+code: "en-IN",
+subtitle: "Smart Assistant for Farmers",
+upload: "Select a leaf image",
+welcome: "Welcome to our Smart Farming Assistant!",
+uploaded: "Image uploaded successfully. The disease detection ML model is not connected yet.",
+voice: "🔊 Listen in English",
+change: "Change Language"
+},
+
+hi: {
+code: "hi-IN",
+subtitle: "किसानों के लिए स्मार्ट सहायक",
+upload: "पत्ती की तस्वीर चुनें",
+welcome: "हमारे स्मार्ट फार्मिंग असिस्टेंट में आपका स्वागत है!",
+uploaded: "तस्वीर सफलतापूर्वक अपलोड हुई। रोग पहचानने वाला ML मॉडल अभी जुड़ा नहीं है।",
+voice: "🔊 हिंदी में सुनें",
+change: "भाषा बदलें"
+},
+
+te: {
+code: "te-IN",
+subtitle: "రైతుల కోసం స్మార్ట్ సహాయకుడు",
+upload: "ఆకు ఫోటోను ఎంచుకోండి",
+welcome: "మా స్మార్ట్ ఫార్మింగ్ అసిస్టెంట్‌కు స్వాగతం!",
+uploaded: "ఫోటో విజయవంతంగా అప్‌లోడ్ చేయబడింది. వ్యాధి గుర్తింపు ML మోడల్ ఇంకా కనెక్ట్ కాలేదు.",
+voice: "🔊 తెలుగులో వినండి",
+change: "భాష మార్చండి"
+},
+
+ml: {
+code: "ml-IN",
+subtitle: "കർഷകർക്കായുള്ള സ്മാർട്ട് സഹായി",
+upload: "ഇലയുടെ ചിത്രം തിരഞ്ഞെടുക്കുക",
+welcome: "ഞങ്ങളുടെ സ്മാർട്ട് ഫാമിംഗ് അസിസ്റ്റന്റിലേക്ക് സ്വാഗതം!",
+uploaded: "ചിത്രം വിജയകരമായി അപ്‌ലോഡ് ചെയ്തു. രോഗം കണ്ടെത്താനുള്ള ML മോഡൽ ഇതുവരെ ബന്ധിപ്പിച്ചിട്ടില്ല.",
+voice: "🔊 മലയാളത്തിൽ കേൾക്കുക",
+change: "ഭാഷ മാറ്റുക"
+},
+
+kn: {
+code: "kn-IN",
+subtitle: "ರೈತರಿಗಾಗಿ ಸ್ಮಾರ್ಟ್ ಸಹಾಯಕ",
+upload: "ಎಲೆಯ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ",
+welcome: "ನಮ್ಮ ಸ್ಮಾರ್ಟ್ ಫಾರ್ಮಿಂಗ್ ಅಸಿಸ್ಟೆಂಟ್‌ಗೆ ಸ್ವಾಗತ!",
+uploaded: "ಫೋಟೋ ಯಶಸ್ವಿಯಾಗಿ ಅಪ್‌ಲೋಡ್ ಆಗಿದೆ. ರೋಗ ಪತ್ತೆಹಚ್ಚುವ ML ಮಾದರಿಯನ್ನು ಇನ್ನೂ ಸಂಪರ್ಕಿಸಲಾಗಿಲ್ಲ.",
+voice: "🔊 ಕನ್ನಡದಲ್ಲಿ ಕೇಳಿ",
+change: "ಭಾಷೆ ಬದಲಾಯಿಸಿ"
+}
+
+};
+
+
+// CURRENT LANGUAGE
+
+let currentLanguage = "ta";
+
+
+// START WEBSITE
+
+function startWebsite() {
+
+currentLanguage =
+document.getElementById("languageSelect").value;
+
+document.getElementById("languagePage")
+.classList.add("hidden");
+
+document.getElementById("mainPage")
+.classList.remove("hidden");
+
+updateLanguage();
+
+}
+
+
+// UPDATE LANGUAGE
+
+function updateLanguage() {
+
+const lang = languages[currentLanguage];
+
+document.documentElement.lang = lang.code;
+
+document.getElementById("subtitle").innerText =
+lang.subtitle;
+
+document.getElementById("uploadHeading").innerText =
+lang.upload;
+
+document.getElementById("result").innerText =
+lang.welcome;
+
+document.getElementById("voiceButton").innerText =
+lang.voice;
+
+document.getElementById("changeButton").innerText =
+lang.change;
+
+}
+
+
+// IMAGE UPLOAD
+
 const input = document.getElementById("leafImage");
 
 input.addEventListener("change", function() {
-  const file = input.files[0];
 
-  if (file) {
-    const imageURL = URL.createObjectURL(file);
-    const preview = document.getElementById("preview");
+const file = input.files[0];
 
-    preview.src = imageURL;
-    preview.style.display = "block";
+if (file) {
 
-    document.getElementById("result").innerText =
-      "புகைப்படம் வெற்றிகரமாக பதிவேற்றப்பட்டது. நோய் கண்டறியும் ML model இன்னும் இணைக்கப்படவில்லை.";
-  }
+if (!file.type.startsWith("image/")) {
+alert("Please select an image file.");
+return;
+}
+
+const imageURL = URL.createObjectURL(file);
+
+const preview = document.getElementById("preview");
+
+preview.src = imageURL;
+preview.style.display = "block";
+
+document.getElementById("result").innerText =
+languages[currentLanguage].uploaded;
+
+}
+
 });
 
-function speakTamil() {
-  const text = document.getElementById("result").innerText;
 
-  if (!("speechSynthesis" in window)) {
-    alert("இந்த browser-ல் voice வசதி கிடைக்கவில்லை.");
-    return;
-  }
+// VOICE OUTPUT
 
-  const speech = new SpeechSynthesisUtterance(text);
-  speech.lang = "ta-IN";
-  speech.rate = 0.9;
+function speakResult() {
 
-  const voices = speechSynthesis.getVoices();
-  const tamilVoice = voices.find(v =>
-    v.lang.toLowerCase().startsWith("ta")
-  );
+const text =
+document.getElementById("result").innerText;
 
-  if (tamilVoice) {
-    speech.voice = tamilVoice;
-  }
-
-  speechSynthesis.cancel();
-  speechSynthesis.speak(speech);
+if (!("speechSynthesis" in window)) {
+alert("Voice is not supported in this browser.");
+return;
 }
+
+const speech = new SpeechSynthesisUtterance(text);
+
+speech.lang = languages[currentLanguage].code;
+speech.rate = 0.9;
+
+const voices = speechSynthesis.getVoices();
+
+const voice = voices.find(v =>
+v.lang.toLowerCase().startsWith(currentLanguage)
+);
+
+if (voice) {
+speech.voice = voice;
+}
+
+speechSynthesis.cancel();
+speechSynthesis.speak(speech);
+
+}
+
+
+// CHANGE LANGUAGE
+
+function changeLanguage() {
+
+if ("speechSynthesis" in window) {
+speechSynthesis.cancel();
+}
+
+document.getElementById("mainPage")
+.classList.add("hidden");
+
+document.getElementById("languagePage")
+.classList.remove("hidden");
+
+document.getElementById("languageSelect").value =
+currentLanguage;
+
+}
+
 </script>
 
 </body>
