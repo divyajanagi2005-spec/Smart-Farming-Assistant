@@ -1,13 +1,25 @@
 
+
 import os
+
+# Reduce TensorFlow memory and thread overhead
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["TF_NUM_INTRAOP_THREADS"] = "1"
+os.environ["TF_NUM_INTEROP_THREADS"] = "1"
+
 import numpy as np
 import tensorflow as tf
-from huggingface_hub import hf_hub_download
 
+from huggingface_hub import hf_hub_download
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from io import BytesIO
+
+# Limit TensorFlow threads
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
 
 app = FastAPI(title="Smart Farming Assistant API")
 
@@ -20,25 +32,39 @@ app.add_middleware(
 
 model = None
 
+
 @app.on_event("startup")
 def load_model():
     global model
 
-    MODEL_PATH = hf_hub_download(
+    print("Downloading TensorFlow model...")
+
+    model_path = hf_hub_download(
         repo_id="divya-bharathi-2609/smart-farming-tomato-model",
         filename="tomato_disease_model.keras"
     )
 
-    model = tf.keras.models.load_model(MODEL_PATH)
+    print("Loading model...")
+
+    model = tf.keras.models.load_model(
+        model_path,
+        compile=False
+    )
+
+    print("Model loaded successfully!")
+
 
 @app.get("/")
 def home():
-    return {"message": "Smart Farming API is running"}
+    return {
+        "message": "Smart Farming API is running"
+    }
+
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
 
-    if not file.content_type.startswith("image/"):
+    if not file.content_type or not file.content_type.startswith("image/"):
         return {"error": "Please upload an image"}
 
     image_bytes = await file.read()
@@ -49,10 +75,20 @@ async def predict(file: UploadFile = File(...)):
 
     image = image.resize((224, 224))
 
-    image_array = np.array(image, dtype=np.float32)
-    image_array = np.expand_dims(image_array, axis=0)
+    image_array = np.array(
+        image,
+        dtype=np.float32
+    )
 
-    predictions = model.predict(image_array)
+    image_array = np.expand_dims(
+        image_array,
+        axis=0
+    )
+
+    predictions = model(
+        image_array,
+        training=False
+    ).numpy()
 
     classes = ["Early Blight", "Healthy"]
 
